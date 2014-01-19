@@ -141,6 +141,7 @@ public class LevelFile {
                 }
             }
 
+            
         }
 
 
@@ -162,8 +163,7 @@ public class LevelFile {
     public void setRandomObject(int colors) {
         @SuppressWarnings("LocalVariableHidesMemberVariable")
         int row, col;
-        int color = 1;
-
+  
         for (int p = 0; p < noOfBalls; p++) {
             row = rand(0, this.row - 1);
             col = rand(0, this.col - 1);
@@ -174,19 +174,8 @@ public class LevelFile {
             }
 
             reservedPoint.add(new Point(row, col));
-            boardStatus[row][col] = color;
-
-            if (colors == 1) {
-                color = 1;
-            } else {
-                while (reservedColor.contains(color = rand(1, colors))) {
-                }
-
-                reservedColor.add(color);
-
-            }
-
-            balls.add(new Ball(row, col, color));
+           
+            balls.add(new Ball(row, col, rand(1, colors)));
 
         }
     }
