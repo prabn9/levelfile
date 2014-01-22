@@ -2,7 +2,9 @@ package moveit;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -11,7 +13,8 @@ import java.util.Random;
  */
 public class LevelFile {
 
-    HashMap<Integer, String> levelFiles;
+    HashMap<Integer, String> levelFile;
+    String currentLevelFile;
     int[][] boardStatus;
     int row, col;
     int var; //number of variations for each grid size :: equals to the number of rows or column
@@ -22,6 +25,7 @@ public class LevelFile {
     ArrayList<Block> blocks;
     ArrayList<Point> reservedPoint;
     ArrayList<Integer> reservedColor;
+    ArrayList<Character> direction;
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public LevelFile() {
@@ -31,12 +35,23 @@ public class LevelFile {
 
     public void init() {
 
-        levelFiles = new HashMap<Integer, String>();
+        levelFile = new HashMap<Integer, String>();
 
         balls = new ArrayList<Ball>();
         blocks = new ArrayList<Block>();
         reservedPoint = new ArrayList<Point>();
         reservedColor = new ArrayList<Integer>();
+        direction = new ArrayList<Character>();
+
+        direction.add('u');
+        direction.add('d');
+        direction.add('l');
+        direction.add('r');
+        direction.add('u');
+        direction.add('d');
+        direction.add('l');
+        direction.add('r');
+
 
         load();
 
@@ -130,7 +145,7 @@ public class LevelFile {
                 setRestOfGrid();
 
                 System.out.println("--------------------------");
-                System.out.println("level"+level);
+                System.out.println("level" + level);
                 for (int i = 0; i < row; i++) {
                     for (int j = 0; j < col; j++) {
                         System.out.print("\t" + boardStatus[i][j]);
@@ -138,10 +153,13 @@ public class LevelFile {
 
                     System.out.println("\n");
 
+
                 }
+
+                setToString(totalColor);
             }
 
-            
+
         }
 
 
@@ -163,7 +181,14 @@ public class LevelFile {
     public void setRandomObject(int colors) {
         @SuppressWarnings("LocalVariableHidesMemberVariable")
         int row, col;
-  
+
+        for (int i = 1; i <= colors; i++) {
+            reservedColor.add(i);
+        }
+
+        Collections.shuffle(reservedColor);
+        int index = 0;
+
         for (int p = 0; p < noOfBalls; p++) {
             row = rand(0, this.row - 1);
             col = rand(0, this.col - 1);
@@ -174,10 +199,133 @@ public class LevelFile {
             }
 
             reservedPoint.add(new Point(row, col));
-           
-            balls.add(new Ball(row, col, rand(1, colors)));
+
+            if (index >= colors) {
+                index = 0;
+            }
+            int color = reservedColor.get(index++);
+
+
+            balls.add(new Ball(row, col, color));
+
+            boardStatus[row][col] = color;
+        }
+    }
+
+    public boolean inspectMatch(int level) {
+
+        if (level == 0) {
+
+            levelFile.put(level, currentLevelFile);
+        } else {
+
+            for (Map.Entry<Integer, String> entry : levelFile.entrySet()) {
+                Integer lvl = entry.getKey();
+                String strLvl = entry.getValue();
+
+
+                if (lvl != level) {
+                    if (currentLevelFile.equalsIgnoreCase(strLvl)) {
+
+                        System.err.println("---------------------Match Found---" + lvl + "--" + level + "------------");
+                        System.err.println("str-----" + strLvl);
+                        System.err.println("clf-----" + currentLevelFile);
+                        System.err.println("---------------------Match Found---" + lvl + "--" + level + "------------");
+                        return true;
+                    }
+                }
+
+            }
+        }
+
+        levelFile.put(level, currentLevelFile);
+        return false;
+    }
+
+    public void shuffleBoard() {
+
+        Collections.shuffle(this.direction);
+
+        char direction;
+        for (int p = 0; p < this.direction.size(); p++) {
+
+            for (Ball ball : balls) {
+                
+                
+                direction = this.direction.get(p);
+                switch (direction) {
+
+                    case 'u':
+
+                        ball.row(ball.row() - 1);
+                        break;
+
+                    case 'd':
+                        
+                        ball.row(ball.row() + 1);
+                        break;
+
+                    case 'l':
+                        ball.col(ball.col() - 1);
+                        break;
+
+                    case 'r':
+                        
+                        ball.col(ball.row() + 1);
+                        break;
+
+                }
+            }
 
         }
+
+    }
+
+public void move(int row, int col) {
+    }
+
+    public String setToString(int colors) {
+
+
+        StringBuilder sb = new StringBuilder("");
+
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+
+                boolean flag = true;
+                for (Ball ball : balls) {
+
+                    if (ball.get(i, j) > 0) {
+
+                        sb.append((char) (ball.get(i, j) + 48));
+                        flag = false;
+                        break;
+                    }
+                }
+
+                if (boardStatus[i][j] == -1) {
+                    sb.append('-');
+                    sb.append('1');
+                } else {
+
+                    if (flag) {
+                        sb.append('0');
+                    }
+
+                    sb.append((char) (boardStatus[i][j] + 48));
+                }
+
+                if (j < col - 1) {
+                    sb.append(",");
+                }
+
+            }
+            sb.append(";");
+        }
+
+        System.out.println(sb.toString());
+
+        return sb.toString();
     }
 
     public int rand(int min, int max) {
